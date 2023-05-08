@@ -41,7 +41,8 @@ app.layout = html.Div(children=[
             'displayModeBar': False
             })
             ])
-        ],className='three columns')
+        ],className='three columns'),
+
     ],className='row'),
     
     html.Div([html.H2('Filter by Rule Name')],className='row'),
