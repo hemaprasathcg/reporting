@@ -41,7 +41,7 @@ app.layout = html.Div(children=[
             'displayModeBar': False
             })
             ])
-        ],className='three columns'),
+        ],className='four columns'),
 
     ],className='row'),
     
@@ -81,9 +81,9 @@ source_table['validation_datetime'] = pd.to_datetime(source_table.validation_tim
 def update_graph1(selected_check):
     
     filtered_table = source_table[source_table['rule_name'] == selected_check]
-    grouped_table = filtered_table.groupby(['validation_date','validation_datetime','rule_name']).count().reset_index()
+    grouped_table = filtered_table.groupby(['validation_date','rule_name']).count().reset_index()
 
-    fig = px.scatter(grouped_table,x='validation_date',y='validation_datetime',size='count',color='rule_name')
+    fig = px.scatter(grouped_table,x='validation_date',y='rule_name',size='count',color='rule_name')
     fig.update_layout(title='Rule applied on date and time')
                     
     return fig
@@ -116,17 +116,19 @@ def update_graph2(selected_check):
     Input(component_id=file_dropdown, component_property='value')
 )
 def update_graph3(selected_check):
-    fig = go.Figure(go.Waterfall(
-        name = "20", orientation = "v",
-        measure = len(source_table['rule_name'].unique())*["relative"]+["total"],
-        x = list(source_table['rule_name'].unique())+['Total'],
-        textposition='auto',
-        text = list(source_table.groupby('rule_name').count()['row_count'])+[source_table.groupby('rule_name').count()['row_count'].sum()],
-        y = list(source_table.groupby('rule_name').count()['row_count'])+[source_table.groupby('rule_name').count()['row_count'].sum()],
-        connector = {"line":{"color":"rgb(63, 63, 63)"}}
-        ))
+    # fig = go.Figure(go.Waterfall(
+    #     name = "20", orientation = "h",
+    #     measure = len(source_table['rule_name'].unique())*["relative"]+["total"],
+    #     y = list(source_table['rule_name'].unique())+['Total'],
+    #     textposition='auto',
+    #     text = list(source_table.groupby('rule_name').count()['row_count'])+[source_table.groupby('rule_name').count()['row_count'].sum()],
+    #     x = list(source_table.groupby('rule_name').count()['row_count'])+[source_table.groupby('rule_name').count()['row_count'].sum()],
+    #     connector = {"line":{"color":"rgb(63, 63, 63)"}}
+    #     ))
+
+    fig = px.histogram(source_table,x='rule_name',color='rule_name',text_auto=True)
     fig.update_layout(
-        title = "Break-up of rules applied on table"
+        title = "No. of Rules applied on dataframe"
     )
                     
     return fig
