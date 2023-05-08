@@ -41,20 +41,7 @@ app.layout = html.Div(children=[
             'displayModeBar': False
             })
             ])
-        ],className='three columns'),
-        html.Div([
-        html.Div([
-            dcc.Graph(id='checks-graph',config={
-            'displayModeBar': False
-            })]),
-        html.Div([
-            dcc.Graph(id='checks-graph2',config={
-            'displayModeBar': False
-            })]),
-        html.Div([
-            dcc.Graph(id='checks-graph4',config={
-            'displayModeBar': False
-            })])],className='nine columns')
+        ],className='three columns')
     ],className='row'),
     
     html.Div([html.H2('Filter by Rule Name')],className='row'),
