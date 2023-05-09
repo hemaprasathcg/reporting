@@ -16,41 +16,40 @@ def read_table(tablename):
     source_table = pd.read_sql_table(tablename, conn)
     return source_table
 source_table=read_table('Accounts_DQ_check_result')
-# print(source_table)
-# exit(0)
-# dq_checks=pd.DataFrame()
-# for file in json_data:
-#     # dict_json[file]=json_data[file]
-#     # pd.concat([dq_checks, json_normalize(json_data[file])]) 
-#      dq_checks=pd.concat([dq_checks, json_normalize(json_data[file])])
+
 # # Create the Dash app
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = Dash(__name__,external_stylesheets=external_stylesheets)
+app = Dash(__name__,external_stylesheets=external_stylesheets,suppress_callback_exceptions=True)
 
 # Set up the app layout
 file_dropdown = dcc.Dropdown(source_table['rule_name'].unique(),source_table['rule_name'][0])
-# file_dropdown2 = dcc.Dropdown(options=dq_checks['source'].unique())  # value='New York'
 
-app.layout = html.Div(children=[
-    html.Div([
-        html.H1(children='Data Quality Checks Report')
-    ],className='row'),
-    html.Div([html.Div(children=[
-        html.Div([
-            dcc.Graph(id='checks-graph3',config={
+app.layout = html.Div([
+    html.H1(children='Data Quality Checks Report'),
+    dcc.Tabs(id="tabs-example-graph", value='tab-1-example-graph', children=[
+        dcc.Tab(label='Summary', value='tab-1-example-graph'),
+        dcc.Tab(label='Rule-Based', value='tab-2-example-graph'),
+    ]),
+    html.Div(id='tabs-content-example-graph')
+])
+
+fig = px.histogram(source_table,x='rule_name',color='rule_name',text_auto=True)
+fig.update_layout(
+    title = "No. of Rules applied on dataframe"
+)
+
+tab_one = html.Div([
+            dcc.Graph(figure=fig,config={
             'displayModeBar': False
             })
-            ])
-        ],className='four columns'),
+            ],className='four columns')
+        
 
-    ],className='row'),
-    
-    html.Div([html.H2('Filter by Rule Name')],className='row'),
-    html.Div(children=[
+
+tab_two = html.Div([html.H2('Filter by Rule Name')],className='row'),html.Div(children=[
         html.Div([html.H1(children='')],className='four columns'),
         html.Div([file_dropdown],className='four columns')
-        ],className='row'),
-    html.Div(children=[
+        ],className='row'),html.Div(children=[
         html.Div([
             dcc.Graph(id='checks-graph',config={
             'displayModeBar': False
@@ -66,13 +65,21 @@ app.layout = html.Div(children=[
             'displayModeBar': False
             })],
             className='four columns')
-    ],className='row'),
-    ])
+    ],className='row')
+
+
+@app.callback(Output('tabs-content-example-graph', 'children'),
+              Input('tabs-example-graph', 'value'))
+def render_content(tab):
+    if tab == 'tab-1-example-graph':
+        return tab_one
+    elif tab == 'tab-2-example-graph':
+        return tab_two
 
 source_table['count'] = 1
 source_table['validation_date'] = pd.to_datetime(source_table.validation_time).dt.date
 source_table['validation_datetime'] = pd.to_datetime(source_table.validation_time).dt.time
-
+print(source_table['validation_time'].sort_values())
 
 @app.callback(
     Output(component_id='checks-graph', component_property='figure'),
@@ -83,7 +90,7 @@ def update_graph1(selected_check):
     filtered_table = source_table[source_table['rule_name'] == selected_check]
     grouped_table = filtered_table.groupby(['validation_date','rule_name']).count().reset_index()
 
-    fig = px.scatter(grouped_table,x='validation_date',y='rule_name',size='count',color='rule_name')
+    fig = px.scatter(grouped_table,x='validation_date',y='count',color='rule_name')
     fig.update_layout(title='Rule applied on date and time')
                     
     return fig
@@ -106,32 +113,7 @@ def update_graph2(selected_check):
     
     return fig
 
-# print(list(source_table.groupby('rule_name').count()['row_count']))#.extend(list(source_table.count())))
-# print(list(source_table.groupby('rule_name').count()['row_count'])+[source_table.groupby('rule_name').count()['row_count'].sum()])
-# print(source_table.groupby('rule_name').count()['row_count'].sum())
 
-
-@app.callback(
-    Output(component_id='checks-graph3', component_property='figure'),
-    Input(component_id=file_dropdown, component_property='value')
-)
-def update_graph3(selected_check):
-    # fig = go.Figure(go.Waterfall(
-    #     name = "20", orientation = "h",
-    #     measure = len(source_table['rule_name'].unique())*["relative"]+["total"],
-    #     y = list(source_table['rule_name'].unique())+['Total'],
-    #     textposition='auto',
-    #     text = list(source_table.groupby('rule_name').count()['row_count'])+[source_table.groupby('rule_name').count()['row_count'].sum()],
-    #     x = list(source_table.groupby('rule_name').count()['row_count'])+[source_table.groupby('rule_name').count()['row_count'].sum()],
-    #     connector = {"line":{"color":"rgb(63, 63, 63)"}}
-    #     ))
-
-    fig = px.histogram(source_table,x='rule_name',color='rule_name',text_auto=True)
-    fig.update_layout(
-        title = "No. of Rules applied on dataframe"
-    )
-                    
-    return fig
 
 @app.callback(
     Output(component_id='checks-graph4', component_property='figure'),
